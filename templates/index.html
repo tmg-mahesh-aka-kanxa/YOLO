@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO Multi-Model Dashboard</title>
+    <style>
+        /* Base Page Configurations */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            text-align: center;
+            background-color: #f4f7f6;
+            padding: 0 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Interactivity Forms & Buttons */
+        .file-input-wrapper {
+            margin-bottom: 20px;
+        }
+        .button-group {
+            margin: 20px 0;
+        }
+        .upload-btn {
+            padding: 12px 26px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+        .face-btn {
+            background-color: #007BFF;
+        }
+        .face-btn:hover {
+            background-color: #0056b3;
+        }
+        .object-btn {
+            background-color: #28a745;
+        }
+        .object-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Feedback Visualization Controls */
+        .result-box {
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 2px dashed #e2e8f0;
+            margin-bottom: 35px;
+        }
+        .result-box h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .result-box img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Loading Spinner Routine */
+        .spinner {
+            display: none;
+            margin: 25px auto 10px auto;
+            width: 45px;
+            height: 45px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #2c3e50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            display: none;
+            color: #64748b;
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 35px;
+        }
+
+        .divider {
+            border: 0;
+            border-top: 1px solid #e2e8f0;
+            margin: 40px 0;
+        }
+
+        /* Dataset Informational Sections */
+        .model-info-section {
+            display: flex;
+            gap: 20px;
+            text-align: left;
+        }
+        .info-card {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 22px;
+            border-radius: 6px;
+            border-left: 4px solid #007BFF;
+        }
+        .info-card:last-child {
+            border-left-color: #28a745;
+        }
+        .info-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+        .info-card p {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .class-list {
+            font-size: 13px;
+            color: #555;
+            padding-left: 20px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Screen Media Breakpoints */
+        @media (max-width: 768px) {
+            .model-info-section {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .upload-btn {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>YOLO Computer Vision Infrastructure</h2>
+        
+        <!-- Submission Control Center -->
+        <form id="uploadForm" action="/" method="POST" enctype="multipart/form-data">
+            <div class="file-input-wrapper">
+                <input type="file" name="image" accept="image/*" required style="font-size: 16px;">
+            </div>
+            <div class="button-group">
+                <button type="submit" name="action" value="detect_faces" class="upload-btn face-btn">Detect Faces</button>
+                <button type="submit" name="action" value="detect_objects" class="upload-btn object-btn">Detect Objects</button>
+            </div>
+        </form>
+
+        <!-- Loading Interface Elements -->
+        <div id="loadingSpinner" class="spinner"></div>
+        <p id="loadingText" class="loading-text">Processing image with selected YOLO model architecture...</p>
+
+        <!-- Dynamic Output Canvas Insertion Point -->
+        {% if result_image %}
+            <div id="resultContainer" class="result-box">
+                <h3>{{ model_used }} Result Visualization:</h3>
+                <img src="{{ result_image }}" alt="Processed YOLO Array Presentation Grid">
+            </div>
+        {% endif %}
+
+        <hr class="divider">
+
+        <!-- Dataset & Model Information Section (Moved Below Controls) -->
+        <div class="model-info-section">
+            <div class="info-card">
+                <h3>🧠 Face Detection Pipeline</h3>
+                <p>
+                    The face detection model is powered by a YOLO architecture optimized on a comprehensive 
+                    <strong>Face Detection Dataset</strong> sourced from Kaggle. Comprising over <strong>16.7K high-resolution images</strong>, 
+                    this dataset includes a wide variety of human faces captured across diverse real-world constraints—including challenging lighting profiles, severe angles, varying resolutions, and facial occlusions (like glasses and masks). This massive, diverse dataset ensures high precision and robust face tracking in varying real-world environments.
+                </p>
+            </div>
+
+            <div class="info-card">
+                <h3>📦 General Object Detection Pipeline</h3>
+                <p>
+                    The object detection backbone is built by combining two legendary computer vision benchmarks: 
+                    <strong>PASCAL VOC 2007</strong> and <strong>PASCAL VOC 2012</strong>. Merging these sets provided a combined training foundation of 
+                    <strong>21,493 images containing over 52,000 annotated ground-truth objects</strong>. 
+                    The model is trained to accurately segment, localize, and draw bounding boxes around <strong>20 distinct object classes</strong> spanning four structural categories:
+                </p>
+                <ul class="class-list">
+                    <li><strong>Vehicles:</strong> Aeroplane, Bicycle, Boat, Bus, Car, Motorbike, Train</li>
+                    <li><strong>Animals / Humans:</strong> Bird, Cat, Cow, Dog, Horse, Sheep, Person</li>
+                    <li><strong>Indoor Items:</strong> Bottle, Chair, Dining Table, Potted Plant, Sofa, TV/Monitor</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Form submission capture loop to toggle interface processing states
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            // Render loading components visible
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('loadingText').style.display = 'block';
+            
+            // Wipe out standard old canvases out of layout scope during ongoing operations
+            var previousResult = document.getElementById('resultContainer');
+            if (previousResult) {
+                previousResult.style.display = 'none';
+            }
+        });
+    </script>
+
+</body>
+</html>
